@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart';
-import 'sell_listing_page.dart';
+import 'main_navigation.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -29,15 +29,18 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
- void _submit() {
+void _submit() {
   if (_formKey.currentState?.validate() ?? false) {
-    // Navigate to Seller Page
+    // instead of just showing a SnackBar, navigate to main navigation
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const SellListingPage()),
+      MaterialPageRoute(
+        builder: (_) => const MainNavigation(initialIndex: 0), // Home tab
+      ),
     );
   }
 }
+
 
   void _onForgotPassword() {
     // TODO: navigate to Forgot Password page
@@ -214,27 +217,27 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 12),
 
                       // Placeholder for SSO button
-                      SizedBox(
-                        width: double.infinity,
+                     SizedBox(
+                       width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Google sign-in (TODO: integrate OAuth)'),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.g_mobiledata),
-                          label: const Text('Sign in with Google'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          const SnackBar(
+                            content: Text('Microsoft SSO (TODO: integrate Azure AD)'),
                           ),
-                        ),
-                      ),
+                        );
+                      },
+    icon: const Icon(Icons.window), // or Icons.account_circle as placeholder
+    label: const Text('Sign in with Microsoft'),
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+  ),
+),
+
                       const SizedBox(height: 16),
 
                       // Signup link

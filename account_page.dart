@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_page.dart';
-import 'sell_listing_page.dart';
-import 'my_listings_page.dart';
-import 'history_page.dart';
-
-
-
+import 'history_page.dart'; // contains enum HistoryFilter
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -15,76 +10,32 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  // 0:Home, 1:Wishlist, 2:Sell, 3:My Listings, 4:Account
-  int _bottomNavIndex = 4;
-  HistoryFilter _historyFilter = HistoryFilter.bought;
-
-  // Profile data stored in state (later: load/save with Supabase)
   String _name = 'John Doe';
   String _email = 'john.doe@company.com';
-  String? _phone;
   String? _department;
   String? _location;
 
-  // Dummy history data for now. Later: replace with Supabase queries.
+  // Dummy history data – used by HistoryPage
   final List<Map<String, dynamic>> _history = [
     {
-      'title': 'Noise Cancelling Headphones',
-      'type': HistoryFilter.bought,
-      'date': '2025-12-01',
-      'amount': 3500.0,
-    },
-    {
-      'title': 'Ergonomic Chair',
+      'title': 'Ergonomic Office Chair',
       'type': HistoryFilter.sold,
-      'date': '2025-11-28',
+      'date': '2025-11-20',
       'amount': 2500.0,
     },
     {
-      'title': 'Old Books Set',
+      'title': 'Mechanical Keyboard',
       'type': HistoryFilter.donated,
-      'date': '2025-11-15',
+      'date': '2025-11-18',
       'amount': 0.0,
     },
     {
-      'title': 'Desk Lamp',
+      'title': 'Projector (Meeting Room)',
       'type': HistoryFilter.bought,
       'date': '2025-11-10',
-      'amount': 600.0,
+      'amount': 500.0,
     },
   ];
-
-  // --------- BOTTOM NAVIGATION ---------
-
-  void _onBottomNavTap(int index) {
-    if (index == _bottomNavIndex) return;
-
-    setState(() => _bottomNavIndex = index);
-
-    if (index == 2) {
-      // Sell
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SellListingPage()),
-      );
-    } else if (index == 3) {
-      // My Listings
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MyListingsPage()),
-      );
-    } else {
-      // Home / Wishlist not implemented yet
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Navigation for this tab is not implemented yet. (TODO)'),
-        ),
-      );
-    }
-  }
-
-  // --------- PROFILE EDIT ---------
 
   void _onEditProfile() async {
     final result = await Navigator.push<Map<String, dynamic>>(
@@ -93,45 +44,20 @@ class _AccountPageState extends State<AccountPage> {
         builder: (_) => EditProfilePage(
           name: _name,
           email: _email,
-          phone: _phone,
           department: _department,
           location: _location,
         ),
       ),
     );
 
-    // Debug: see what comes back
-    // Check your debug console when you press Save
-    print('EditProfile result: $result');
-
     if (result != null && mounted) {
       setState(() {
-        if (result['name'] != null &&
-            (result['name'] as String).trim().isNotEmpty) {
-          _name = (result['name'] as String).trim();
-        }
-        if (result['email'] != null &&
-            (result['email'] as String).trim().isNotEmpty) {
-          _email = (result['email'] as String).trim();
-        }
-
-        final phone = (result['phone'] as String?)?.trim() ?? '';
-        _phone = phone.isNotEmpty ? phone : null;
-
-        final dept = (result['department'] as String?)?.trim() ?? '';
-        _department = dept.isNotEmpty ? dept : null;
-
-        final loc = (result['location'] as String?)?.trim() ?? '';
-        _location = loc.isNotEmpty ? loc : null;
+        _name = (result['name'] as String?) ?? _name;
+        _department = result['department'] as String?;
+        _location = result['location'] as String?;
       });
     }
   }
-
-  // --------- HISTORY HELPERS ---------
-
-  
-
-  
 
   void _openHistory(HistoryFilter filter) {
     Navigator.push(
@@ -145,332 +71,232 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-  // --------- LOGOUT BOTTOM SHEET ---------
+  void _onHelp() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Help & Support (TODO: implement)'),
+      ),
+    );
+  }
 
   void _showLogoutOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout from this device'),
-              onTap: () {
-                Navigator.pop(context);
-                _onLogoutThisDevice();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout from all devices'),
-              onTap: () {
-                Navigator.pop(context);
-                _onLogoutAllDevices();
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
-        );
-      },
-    );
-  }
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout from this device'),
+            onTap: () {
+              Navigator.pop(context);
+              _onLogoutThisDevice();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout from all devices'),
+            onTap: () {
+              Navigator.pop(context);
+              _onLogoutAllDevices();
+            },
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    },
+  );
+}
 
-  // --------- OTHER ACTIONS ---------
+void _onLogoutThisDevice() {
+  // TODO: implement Supabase signOut(current session only)
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Logout (this device) (TODO)')),
+  );
+}
 
-  void _onHelpAndSupport() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Help & Support screen not implemented yet. (TODO)'),
-      ),
-    );
-  }
+void _onLogoutAllDevices() {
+  // TODO: implement Supabase multi-session revoke via RPC/EdgeFunction
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Logout (all devices) (TODO)')),
+  );
+}
 
-  void _onLogoutThisDevice() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logout (this device) not implemented yet. (TODO)'),
-      ),
-    );
-  }
-
-  void _onLogoutAllDevices() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logout (all devices) not implemented yet. (TODO)'),
-      ),
-    );
-  }
-
-  // --------- UI ---------
 
   @override
   Widget build(BuildContext context) {
+    final background = const Color(0xFFF5EFE7);
+
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
+        backgroundColor: const Color(0xFF3C3C3C),
         title: const Text('Account'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ---------- PROFILE SECTION ----------
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      child: Text(
-                        _name.isNotEmpty ? _name[0].toUpperCase() : '?',
-                        style: const TextStyle(fontSize: 32),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _email,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    if (_department != null && _department!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _department!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                    if (_location != null && _location!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        _location!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: _onEditProfile,
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Edit profile'),
-                    ),
-                  ],
+              // Profile avatar + name + email
+              CircleAvatar(
+                radius: 32,
+                child: Text(
+                  _name.isNotEmpty ? _name[0].toUpperCase() : '?',
+                  style: const TextStyle(fontSize: 28),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // ---------- BUY / SELL / DONATE CARDS ----------
+              const SizedBox(height: 8),
               Text(
-                'History',
-                style: Theme.of(context).textTheme.titleMedium,
+                _name,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _email,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              if (_department != null && _department!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  _department!,
+                  style:
+                      const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+              ],
+              if (_location != null && _location!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  _location!,
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+              const SizedBox(height: 6),
+              TextButton.icon(
+                onPressed: _onEditProfile,
+                icon: const Icon(Icons.edit, size: 18),
+                label: const Text('Edit profile'),
+              ),
+
+              const SizedBox(height: 24),
+
+              // History header
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'History',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 8),
 
+              // Buy / Sell / Donate cards in a row
               Row(
                 children: [
                   Expanded(
-                    child: Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () {
-                          setState(() {
-                            _historyFilter = HistoryFilter.bought;
-                          });
-                          _openHistory(HistoryFilter.bought);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 8,
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.shopping_cart,
-                                color: _historyFilter == HistoryFilter.bought
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Buy',
-                                style: TextStyle(
-                                  fontWeight:
-                                      _historyFilter == HistoryFilter.bought
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    child: _historyCard(
+                      icon: Icons.shopping_cart_outlined,
+                      label: 'Buy',
+                      onTap: () => _openHistory(HistoryFilter.bought),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () {
-                          setState(() {
-                            _historyFilter = HistoryFilter.sold;
-                          });
-                          _openHistory(HistoryFilter.sold);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 8,
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.sell,
-                                color: _historyFilter == HistoryFilter.sold
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Sell',
-                                style: TextStyle(
-                                  fontWeight:
-                                      _historyFilter == HistoryFilter.sold
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    child: _historyCard(
+                      icon: Icons.sell_outlined,
+                      label: 'Sell',
+                      onTap: () => _openHistory(HistoryFilter.sold),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () {
-                          setState(() {
-                            _historyFilter = HistoryFilter.donated;
-                          });
-                          _openHistory(HistoryFilter.donated);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 8),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.volunteer_activism,
-                                color: _historyFilter == HistoryFilter.donated
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Donate',
-                                style: TextStyle(
-                                  fontWeight:
-                                      _historyFilter == HistoryFilter.donated
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    child: _historyCard(
+                      icon: Icons.volunteer_activism_outlined,
+                      label: 'Donate',
+                      onTap: () => _openHistory(HistoryFilter.donated),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
 
-            
-
-              // ---------- ACCOUNT SETTINGS ----------
-              Text(
-                'Account Settings',
-                style: Theme.of(context).textTheme.titleMedium,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Account Settings',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 8),
 
               Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: ListTile(
                   leading: const Icon(Icons.help_outline),
                   title: const Text('Help & Support'),
-                  onTap: _onHelpAndSupport,
+                  onTap: _onHelp,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Card(
-                child: ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Logout'),
-                  onTap: _showLogoutOptions,
-                ),
-              ),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: ListTile(
+    leading: const Icon(Icons.logout),
+    title: const Text('Logout'),
+    onTap: _showLogoutOptions, // 👈 UPDATED
+  ),
+),
+
             ],
           ),
         ),
       ),
+    );
+  }
 
-      // ---------- BOTTOM NAVIGATION ----------
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _bottomNavIndex,
-        onTap: _onBottomNavTap,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+  Widget _historyCard({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 22),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Wishlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
-            label: 'Sell',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_outlined),
-            activeIcon: Icon(Icons.list),
-            label: 'My Listings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Account',
-          ),
-        ],
+        ),
       ),
     );
   }
