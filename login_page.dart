@@ -31,11 +31,16 @@ class _LoginPageState extends State<LoginPage> {
 
 void _submit() {
   if (_formKey.currentState?.validate() ?? false) {
-    // instead of just showing a SnackBar, navigate to main navigation
+    // TEMPORARY role logic (replace after Supabase)
+    final bool isAdmin =
+        _emailController.text.trim().toLowerCase().endsWith('@admin.com');
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const MainNavigation(initialIndex: 0), // Home tab
+        builder: (_) => MainNavigation(
+          isAdmin: isAdmin,
+        ),
       ),
     );
   }
