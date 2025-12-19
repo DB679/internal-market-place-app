@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'listing.dart';
+import 'listing_detail_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -34,28 +36,51 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     ),
   );
 
-  final List<Map<String, dynamic>> listings = [
-    {
-      'title': 'Office Chair',
-      'listedBy': 'john@company.com',
-      'type': 'Sell',
-      'price': '₹2500',
-      'date': '2025-12-01',
-    },
-    {
-      'title': 'Books Set',
-      'listedBy': 'alice@company.com',
-      'type': 'Donation',
-      'price': 'Free',
-      'date': '2025-11-29',
-    },
-    {
-      'title': 'Projector',
-      'listedBy': 'mark@company.com',
-      'type': 'Rent',
-      'price': '₹500',
-      'date': '2025-11-28',
-    },
+  // Pending listings as `Listing` objects so admin can open full detail view
+  final List<Listing> listings = [
+    Listing(
+      id: 'a1',
+      title: 'Office Chair',
+      imageUrl: 'https://images.pexels.com/photos/374746/pexels-photo-374746.jpeg',
+      price: 2500,
+      location: 'Head Office, Floor 3',
+      date: '2025-12-01',
+      category: 'Furniture',
+      description: 'Comfortable office chair awaiting approval.',
+      sellerName: 'john@company.com',
+      sellerDepartment: 'Facilities',
+      sellerPhone: '+1-555-0201',
+      sellerEmail: 'john@company.com',
+    ),
+    Listing(
+      id: 'a2',
+      title: 'Books Set',
+      imageUrl: 'https://images.pexels.com/photos/1370295/pexels-photo-1370295.jpeg',
+      price: 0,
+      location: 'Library',
+      date: '2025-11-29',
+      category: 'Books',
+      isDonation: true,
+      description: 'Donation: programming book collection.',
+      sellerName: 'alice@company.com',
+      sellerDepartment: 'Library',
+      sellerPhone: '+1-555-0202',
+      sellerEmail: 'alice@company.com',
+    ),
+    Listing(
+      id: 'a3',
+      title: 'Projector',
+      imageUrl: 'https://images.pexels.com/photos/276024/pexels-photo-276024.jpeg',
+      price: 500,
+      location: 'Conference Room',
+      date: '2025-11-28',
+      category: 'Electronics',
+      description: 'Portable projector for presentations.',
+      sellerName: 'mark@company.com',
+      sellerDepartment: 'AV',
+      sellerPhone: '+1-555-0203',
+      sellerEmail: 'mark@company.com',
+    ),
   ];
 
   // ---------- UI ----------
@@ -260,6 +285,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 child: DataTable(
                   columnSpacing: 24,
                   columns: const [
+                    DataColumn(label: Text('Sr No')),
                     DataColumn(label: Text('Title')),
                     DataColumn(label: Text('Listed By')),
                     DataColumn(label: Text('Type')),
@@ -267,25 +293,76 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     DataColumn(label: Text('Uploaded')),
                     DataColumn(label: Text('Actions')),
                   ],
-                  rows: listings.map((item) {
+                  rows: listings.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
                     return DataRow(cells: [
-                      DataCell(Text(item['title'])),
-                      DataCell(Text(item['listedBy'])),
-                      DataCell(Text(item['type'])),
-                      DataCell(Text(item['price'])),
-                      DataCell(Text(item['date'])),
+                      DataCell(Text('${index + 1}'), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
+                      DataCell(Text(item.title), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
+                      DataCell(Text(item.sellerName ?? 'Unknown'), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
+                      DataCell(Text(item.isDonation ? 'Donation' : item.category), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
+                      DataCell(Text(item.isDonation ? 'Free' : '₹ ${item.price}'), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
+                      DataCell(Text(item.date), onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                          ),
+                        );
+                      }),
                       DataCell(
                         Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.check,
-                                  color: Colors.green),
-                              onPressed: () {},
+                              icon: const Icon(Icons.check, color: Colors.green),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Listing approved')),
+                                );
+                              },
                             ),
                             IconButton(
-                              icon:
-                                  const Icon(Icons.close, color: Colors.red),
-                              onPressed: () {},
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Listing rejected')),
+                                );
+                              },
                             ),
                           ],
                         ),
