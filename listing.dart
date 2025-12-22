@@ -8,6 +8,10 @@ class Listing {
   final String category;
   final bool isDonation;
   final String? description;
+  final String? sellerName;
+  final String? sellerDepartment;
+  final String? sellerPhone;
+  final String? sellerEmail;
 
   Listing({
     required this.id,
@@ -19,6 +23,10 @@ class Listing {
     required this.category,
     this.isDonation = false,
     this.description,
+    this.sellerName,
+    this.sellerDepartment,
+    this.sellerPhone,
+    this.sellerEmail,
   });
 
   // Convert to JSON
@@ -33,6 +41,10 @@ class Listing {
       'category': category,
       'isDonation': isDonation,
       'description': description,
+      'sellerName': sellerName,
+      'sellerDepartment': sellerDepartment,
+      'sellerPhone': sellerPhone,
+      'sellerEmail': sellerEmail,
     };
   }
 
@@ -48,6 +60,10 @@ class Listing {
       category: json['category'] as String,
       isDonation: json['isDonation'] as bool? ?? false,
       description: json['description'] as String?,
+      sellerName: json['sellerName'] as String?,
+      sellerDepartment: json['sellerDepartment'] as String?,
+      sellerPhone: json['sellerPhone'] as String?,
+      sellerEmail: json['sellerEmail'] as String?,
     );
   }
 
@@ -62,6 +78,10 @@ class Listing {
     String? category,
     bool? isDonation,
     String? description,
+    String? sellerName,
+    String? sellerDepartment,
+    String? sellerPhone,
+    String? sellerEmail,
   }) {
     return Listing(
       id: id ?? this.id,
@@ -73,6 +93,10 @@ class Listing {
       category: category ?? this.category,
       isDonation: isDonation ?? this.isDonation,
       description: description ?? this.description,
+      sellerName: sellerName ?? this.sellerName,
+      sellerDepartment: sellerDepartment ?? this.sellerDepartment,
+      sellerPhone: sellerPhone ?? this.sellerPhone,
+      sellerEmail: sellerEmail ?? this.sellerEmail,
     );
   }
 }

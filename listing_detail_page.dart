@@ -5,8 +5,9 @@ import 'dart:async';
 
 class ListingDetailPage extends StatefulWidget {
   final Listing listing;
+  final bool showInquiry;
 
-  const ListingDetailPage({super.key, required this.listing});
+  const ListingDetailPage({super.key, required this.listing, this.showInquiry = true});
 
   @override
   State<ListingDetailPage> createState() => _ListingDetailPageState();
@@ -180,6 +181,57 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
                     ),
 
                     const SizedBox(height: 24),
+                    // Contact Information (includes seller name, department, phone and email)
+                    const Text(
+                      "Contact Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Name + Department
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.person, color: Colors.black54),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(listing.sellerName ?? 'Unknown Seller', style: const TextStyle(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 4),
+                              Text(listing.sellerDepartment ?? 'Department not specified', style: const TextStyle(color: Colors.black54)),
+                            ],
+                          ),
+                        ),
+                        // removed right-side contact button per design
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+                    // Phone
+                    if (listing.sellerPhone != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Text(listing.sellerPhone!),
+                        ],
+                      ),
+                    const SizedBox(height: 8),
+                    // Email
+                    if (listing.sellerEmail != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.email, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Text(listing.sellerEmail!),
+                        ],
+                      ),
+
+                    const SizedBox(height: 24),
                     const Divider(),
                     const SizedBox(height: 16),
 
@@ -202,35 +254,39 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
 
                     const SizedBox(height: 24),
 
+                    // (Removed seller card) Seller details now shown under Contact Information below
+
+
                     // Contact Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // Implement contact seller functionality
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Inquiry Sent'),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.message),
-                        label: const Text(
-                          'Send Inquiry',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    if (widget.showInquiry)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final seller = listing.sellerName ?? 'the seller';
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Inquiry sent to $seller'),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.message),
+                          label: const Text(
+                            'Send Inquiry',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
                     const SizedBox(height: 100),
                   ],
