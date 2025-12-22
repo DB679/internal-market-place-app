@@ -87,6 +87,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final trendData = _selectedRange == 7 ? trend7Days : trend30Days;
+    final width = MediaQuery.of(context).size.width;
+    final isNarrow = width < 900;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Admin Dashboard')),
@@ -109,166 +111,296 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             const SizedBox(height: 24),
 
             // ================= PIE + TREND =================
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                // ---------- PIE CHART ----------
-                Expanded(
-                  flex: 2,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Listing Status Distribution',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 200,
-                            child: PieChart(
-                              PieChartData(
-                                centerSpaceRadius: 50,
-                                sectionsSpace: 2,
-                                sections: [
-                                  PieChartSectionData(
-                                    value: approvedCount.toDouble(),
-                                    color: Colors.green,
-                                    title: 'Approved',
-                                    radius: 60,
-                                  ),
-                                  PieChartSectionData(
-                                    value: pendingCount.toDouble(),
-                                    color: Colors.orange,
-                                    title: 'Pending',
-                                    radius: 60,
-                                  ),
-                                  PieChartSectionData(
-                                    value: rejectedCount.toDouble(),
-                                    color: Colors.red,
-                                    title: 'Rejected',
-                                    radius: 60,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // ---------- TREND CHART ----------
-                Expanded(
-                  flex: 3,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            isNarrow
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Pie chart on top for narrow screens
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
                             children: [
                               const Text(
-                                'Activity Overview',
+                                'Listing Status Distribution',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              ToggleButtons(
-                                isSelected: [
-                                  _selectedRange == 7,
-                                  _selectedRange == 30
-                                ],
-                                onPressed: (index) {
-                                  setState(() {
-                                    _selectedRange = index == 0 ? 7 : 30;
-                                  });
-                                },
-                                children: const [
-                                  Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 12),
-                                    child: Text('7 Days'),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 180,
+                                child: PieChart(
+                                  PieChartData(
+                                    centerSpaceRadius: 40,
+                                    sectionsSpace: 2,
+                                    sections: [
+                                      PieChartSectionData(
+                                        value: approvedCount.toDouble(),
+                                        color: Colors.green,
+                                        title: 'Approved',
+                                        radius: 48,
+                                      ),
+                                      PieChartSectionData(
+                                        value: pendingCount.toDouble(),
+                                        color: Colors.orange,
+                                        title: 'Pending',
+                                        radius: 48,
+                                      ),
+                                      PieChartSectionData(
+                                        value: rejectedCount.toDouble(),
+                                        color: Colors.red,
+                                        title: 'Rejected',
+                                        radius: 48,
+                                      ),
+                                    ],
                                   ),
-                                  Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 12),
-                                    child: Text('30 Days'),
-                                  ),
-                                ],
+                                ),
                               ),
                             ],
                           ),
-
-                          const SizedBox(height: 12),
-
-                          SizedBox(
-                            height: 260,
-                            child: LineChart(
-                              LineChartData(
-                                minX: 1,
-                                maxX: _selectedRange.toDouble(),
-                                minY: 0,
-                                maxY: 6,
-                                gridData: FlGridData(show: true),
-                                borderData: FlBorderData(show: true),
-
-                                titlesData: FlTitlesData(
-                                  bottomTitles: AxisTitles(
-                                    axisNameWidget: const Padding(
-                                      padding: EdgeInsets.only(top: 8),
-                                      child: Text('Days'),
-                                    ),
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      interval:
-                                          _selectedRange == 7 ? 1 : 5,
-                                    ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Activity Overview',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                  leftTitles: AxisTitles(
-                                    axisNameWidget: const Padding(
-                                      padding: EdgeInsets.only(right: 8),
-                                      child: Text('Listings Count'),
-                                    ),
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      interval: 1,
-                                      reservedSize: 40,
-                                    ),
-                                  ),
-                                  rightTitles: const AxisTitles(
-                                      sideTitles:
-                                          SideTitles(showTitles: false)),
-                                  topTitles: const AxisTitles(
-                                      sideTitles:
-                                          SideTitles(showTitles: false)),
-                                ),
-
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    isCurved: true,
-                                    color: Colors.green,
-                                    barWidth: 3,
-                                    dotData: FlDotData(show: true),
-                                    spots: trendData,
+                                  ToggleButtons(
+                                    isSelected: [
+                                      _selectedRange == 7,
+                                      _selectedRange == 30
+                                    ],
+                                    onPressed: (index) {
+                                      setState(() {
+                                        _selectedRange = index == 0 ? 7 : 30;
+                                      });
+                                    },
+                                    children: const [
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 12),
+                                        child: Text('7 Days'),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 12),
+                                        child: Text('30 Days'),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 220,
+                                child: LineChart(
+                                  LineChartData(
+                                    minX: 1,
+                                    maxX: _selectedRange.toDouble(),
+                                    minY: 0,
+                                    maxY: 6,
+                                    gridData: FlGridData(show: true),
+                                    borderData: FlBorderData(show: true),
+                                    titlesData: FlTitlesData(
+                                      bottomTitles: AxisTitles(
+                                        axisNameWidget: const Padding(
+                                          padding: EdgeInsets.only(top: 8),
+                                          child: Text('Days'),
+                                        ),
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          interval: _selectedRange == 7 ? 1 : 5,
+                                        ),
+                                      ),
+                                      leftTitles: AxisTitles(
+                                        axisNameWidget: const Padding(
+                                          padding: EdgeInsets.only(right: 8),
+                                          child: Text('Listings Count'),
+                                        ),
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          interval: 1,
+                                          reservedSize: 40,
+                                        ),
+                                      ),
+                                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    ),
+                                    lineBarsData: [
+                                      LineChartBarData(
+                                        isCurved: true,
+                                        color: Colors.green,
+                                        barWidth: 3,
+                                        dotData: FlDotData(show: true),
+                                        spots: trendData,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ---------- PIE CHART ----------
+                      Expanded(
+                        flex: 2,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Listing Status Distribution',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 200,
+                                  child: PieChart(
+                                    PieChartData(
+                                      centerSpaceRadius: 50,
+                                      sectionsSpace: 2,
+                                      sections: [
+                                        PieChartSectionData(
+                                          value: approvedCount.toDouble(),
+                                          color: Colors.green,
+                                          title: 'Approved',
+                                          radius: 60,
+                                        ),
+                                        PieChartSectionData(
+                                          value: pendingCount.toDouble(),
+                                          color: Colors.orange,
+                                          title: 'Pending',
+                                          radius: 60,
+                                        ),
+                                        PieChartSectionData(
+                                          value: rejectedCount.toDouble(),
+                                          color: Colors.red,
+                                          title: 'Rejected',
+                                          radius: 60,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(width: 16),
+
+                      // ---------- TREND CHART ----------
+                      Expanded(
+                        flex: 3,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Activity Overview',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    ToggleButtons(
+                                      isSelected: [
+                                        _selectedRange == 7,
+                                        _selectedRange == 30
+                                      ],
+                                      onPressed: (index) {
+                                        setState(() {
+                                          _selectedRange = index == 0 ? 7 : 30;
+                                        });
+                                      },
+                                      children: const [
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 12),
+                                          child: Text('7 Days'),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 12),
+                                          child: Text('30 Days'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                SizedBox(
+                                  height: 260,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minX: 1,
+                                      maxX: _selectedRange.toDouble(),
+                                      minY: 0,
+                                      maxY: 6,
+                                      gridData: FlGridData(show: true),
+                                      borderData: FlBorderData(show: true),
+
+                                      titlesData: FlTitlesData(
+                                        bottomTitles: AxisTitles(
+                                          axisNameWidget: const Padding(
+                                            padding: EdgeInsets.only(top: 8),
+                                            child: Text('Days'),
+                                          ),
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            interval: _selectedRange == 7 ? 1 : 5,
+                                          ),
+                                        ),
+                                        leftTitles: AxisTitles(
+                                          axisNameWidget: const Padding(
+                                            padding: EdgeInsets.only(right: 8),
+                                            child: Text('Listings Count'),
+                                          ),
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            interval: 1,
+                                            reservedSize: 40,
+                                          ),
+                                        ),
+                                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                      ),
+
+                                      lineBarsData: [
+                                        LineChartBarData(
+                                          isCurved: true,
+                                          color: Colors.green,
+                                          barWidth: 3,
+                                          dotData: FlDotData(show: true),
+                                          spots: trendData,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
 
             const SizedBox(height: 32),
 
@@ -280,95 +412,87 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             const SizedBox(height: 8),
 
             Card(
-              child: SizedBox(
-                width: double.infinity,
-                child: DataTable(
-                  columnSpacing: 24,
-                  columns: const [
-                    DataColumn(label: Text('Sr No')),
-                    DataColumn(label: Text('Title')),
-                    DataColumn(label: Text('Listed By')),
-                    DataColumn(label: Text('Type')),
-                    DataColumn(label: Text('Price')),
-                    DataColumn(label: Text('Uploaded')),
-                    DataColumn(label: Text('Actions')),
-                  ],
-                  rows: listings.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    return DataRow(cells: [
-                      DataCell(Text('${index + 1}'), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(Text(item.title), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(Text(item.sellerName ?? 'Unknown'), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(Text(item.isDonation ? 'Donation' : item.category), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(Text(item.isDonation ? 'Free' : '₹ ${item.price}'), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(Text(item.date), onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
-                          ),
-                        );
-                      }),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.check, color: Colors.green),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Listing approved')),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Listing rejected')),
-                                );
-                              },
-                            ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final tableWidth = constraints.maxWidth;
+                    final narrowTable = tableWidth < 700;
+
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: narrowTable ? tableWidth : 900),
+                        child: DataTable(
+                          showCheckboxColumn: false,
+                          columnSpacing: narrowTable ? 12 : 24,
+                          dataRowHeight: narrowTable ? 48 : 56,
+                          headingRowHeight: narrowTable ? 36 : 48,
+                          columns: const [
+                            DataColumn(label: Text('Sr No')),
+                            DataColumn(label: Text('Title')),
+                            DataColumn(label: Text('Listed By')),
+                            DataColumn(label: Text('Type')),
+                            DataColumn(label: Text('Price')),
+                            DataColumn(label: Text('Uploaded')),
+                            DataColumn(label: Text('Actions')),
                           ],
+                          rows: listings.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return DataRow(
+                              color: MaterialStateProperty.resolveWith<Color?>((states) {
+                                if (states.contains(MaterialState.hovered)) {
+                                  return Theme.of(context).colorScheme.primary.withOpacity(0.06);
+                                }
+                                return null;
+                              }),
+                              onSelectChanged: (selected) {
+                                if (selected == true) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                                    ),
+                                  );
+                                }
+                              },
+                              cells: [
+                                DataCell(Text('${index + 1}')),
+                                DataCell(Text(item.title)),
+                                DataCell(Text(item.sellerName ?? 'Unknown')),
+                                DataCell(Text(item.isDonation ? 'Donation' : item.category)),
+                                DataCell(Text(item.isDonation ? 'Free' : '₹ ${item.price}')),
+                                DataCell(Text(item.date)),
+                                DataCell(
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.check, color: Colors.green),
+                                        onPressed: () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Listing approved')),
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close, color: Colors.red),
+                                        onPressed: () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Listing rejected')),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
-                    ]);
-                  }).toList(),
+                    );
+                  },
                 ),
               ),
             ),
