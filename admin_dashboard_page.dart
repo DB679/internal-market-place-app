@@ -429,11 +429,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           dataRowHeight: narrowTable ? 48 : 56,
                           headingRowHeight: narrowTable ? 36 : 48,
                           columns: const [
-                            DataColumn(label: Text('Sr No')),
                             DataColumn(label: Text('Title')),
                             DataColumn(label: Text('Listed By')),
-                            DataColumn(label: Text('Type')),
-                            DataColumn(label: Text('Price')),
                             DataColumn(label: Text('Uploaded')),
                             DataColumn(label: Text('Actions')),
                           ],
@@ -452,17 +449,32 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (c) => ListingDetailPage(listing: item, showInquiry: false),
+                                      builder: (c) => ListingDetailPage(listing: item, showInquiry: false, showAdminActions: true),
                                     ),
-                                  );
+                                  ).then((result) {
+                                    if (result != null && mounted) {
+                                      if (result == 'accepted') {
+                                        setState(() {
+                                          listings.removeWhere((l) => l.id == item.id);
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Listing approved')),
+                                        );
+                                      } else if (result == 'rejected') {
+                                        setState(() {
+                                          listings.removeWhere((l) => l.id == item.id);
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Listing rejected')),
+                                        );
+                                      }
+                                    }
+                                  });
                                 }
                               },
                               cells: [
-                                DataCell(Text('${index + 1}')),
                                 DataCell(Text(item.title)),
                                 DataCell(Text(item.sellerName ?? 'Unknown')),
-                                DataCell(Text(item.isDonation ? 'Donation' : item.category)),
-                                DataCell(Text(item.isDonation ? 'Free' : '₹ ${item.price}')),
                                 DataCell(Text(item.date)),
                                 DataCell(
                                   Row(
@@ -470,6 +482,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                       IconButton(
                                         icon: const Icon(Icons.check, color: Colors.green),
                                         onPressed: () {
+                                          setState(() {
+                                            listings.removeAt(index);
+                                          });
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('Listing approved')),
                                           );
@@ -478,6 +493,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                       IconButton(
                                         icon: const Icon(Icons.close, color: Colors.red),
                                         onPressed: () {
+                                          setState(() {
+                                            listings.removeAt(index);
+                                          });
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('Listing rejected')),
                                           );

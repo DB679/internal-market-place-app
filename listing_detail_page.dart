@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'listing.dart';
 import 'wishlist_service.dart';
+import 'inquiry_service.dart';
+import '../../../../services/user_service.dart';
 import 'dart:async';
 
 class ListingDetailPage extends StatefulWidget {
   final Listing listing;
   final bool showInquiry;
+  final bool showAdminActions;
 
-  const ListingDetailPage({super.key, required this.listing, this.showInquiry = true});
+  const ListingDetailPage({super.key, required this.listing, this.showInquiry = true, this.showAdminActions = false});
 
   @override
   State<ListingDetailPage> createState() => _ListingDetailPageState();
@@ -16,11 +19,13 @@ class ListingDetailPage extends StatefulWidget {
 class _ListingDetailPageState extends State<ListingDetailPage> {
   late bool _isFav;
   StreamSubscription? _wishlistSubscription;
+  late bool _inquirySent;
 
   @override
   void initState() {
     super.initState();
     _isFav = WishlistService.instance.containsSync(widget.listing.id);
+    _inquirySent = InquiryService.instance.all.any((i) => i.listingId == widget.listing.id);
     
     _wishlistSubscription = WishlistService.instance.stream.listen((_) {
       if (mounted) {
@@ -46,6 +51,101 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
           content: Text(_isFav ? 'Added to wishlist' : 'Removed from wishlist'),
           duration: const Duration(seconds: 1),
         ),
+      );
+    }
+  }
+
+  Future<void> _showInquiryDialog() async {
+    final nameCtrl = TextEditingController();
+    final contactCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final sent = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send Inquiry'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Your name'),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter your name' : null,
+                ),
+                TextFormField(
+                  controller: contactCtrl,
+                  decoration: const InputDecoration(labelText: 'Contact (email or phone)'),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter contact' : null,
+                ),
+                TextFormField(
+                  controller: messageCtrl,
+                  decoration: const InputDecoration(labelText: 'Message (optional)'),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                InquiryService.instance.addInquiry(
+                  listingId: widget.listing.id,
+                  listingTitle: widget.listing.title,
+                  buyerName: nameCtrl.text.trim(),
+                  buyerContact: contactCtrl.text.trim(),
+                  message: messageCtrl.text.trim(),
+                );
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+
+    if (sent == true && mounted) {
+      final seller = widget.listing.sellerName ?? 'the seller';
+      // mark sent so button disables
+      setState(() {
+        _inquirySent = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Inquiry sent to $seller')),
+      );
+    }
+  }
+
+  Future<void> _sendInquiryAuto() async {
+    final user = UserService.instance;
+    if (!user.isLoggedIn) {
+      // fallback to dialog if no profile
+      await _showInquiryDialog();
+      return;
+    }
+
+    InquiryService.instance.addInquiry(
+      listingId: widget.listing.id,
+      listingTitle: widget.listing.title,
+      buyerName: user.name,
+      buyerContact: user.contact,
+      message: 'Automated enquiry: please contact me.',
+    );
+
+    if (mounted) {
+      setState(() {
+        _inquirySent = true;
+      });
+      final seller = widget.listing.sellerName ?? 'the seller';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Inquiry sent to $seller')),
       );
     }
   }
@@ -262,30 +362,73 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            final seller = listing.sellerName ?? 'the seller';
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Inquiry sent to $seller'),
+                        child: _inquirySent
+                            ? ElevatedButton.icon(
+                                onPressed: null,
+                                icon: const Icon(Icons.check, color: Colors.white),
+                                label: const Text('Enquiry Sent', style: TextStyle(fontSize: 16)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.message),
-                          label: const Text(
-                            'Send Inquiry',
-                            style: TextStyle(fontSize: 16),
+                              )
+                                : ElevatedButton.icon(
+                                onPressed: () async {
+                                  await _sendInquiryAuto();
+                                },
+                                icon: const Icon(Icons.message),
+                                label: const Text(
+                                  'Send Inquiry',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                      ),
+
+                    // Admin actions: Accept / Reject directly from expanded view
+                    if (widget.showAdminActions)
+                      Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, 'accepted');
+                                  },
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text('Accept', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, 'rejected');
+                                  },
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    child: Text('Reject', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
 
                     const SizedBox(height: 100),
