@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'features/listings/presentation/pages/login_page.dart';
 import 'app_theme.dart';
 import 'theme_controller.dart';
-import 'widgets/responsive_wrapper.dart';
+import 'services/listing_provider.dart';
+import 'services/wishlist_provider.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,17 +31,19 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Company Marketplace',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeController.instance.mode.value,
-
-      // 🔹 IMPORTANT:
-      // App must ALWAYS start at LoginPage.
-      // MainNavigation(isAdmin: ...) is pushed ONLY after login.
-      home: const ResponsiveWrapper(child: LoginPage()),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ListingProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Company Marketplace',
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeController.instance.mode.value,
+        home: const LoginPage(),
+      ),
     );
   }
 }

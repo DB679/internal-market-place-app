@@ -81,6 +81,15 @@ void _submit() {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Linde Logo at top
+                      Center(
+                        child: Image.asset(
+                          'assets/linde_logo.png',
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       const Text(
                         'Welcome back!',
                         style: TextStyle(
@@ -250,7 +259,7 @@ void _submit() {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            "Don’t have an account?",
+                            "Don't have an account?",
                             style: TextStyle(fontSize: 13),
                           ),
                           TextButton(
@@ -275,14 +284,14 @@ void _submit() {
                     height: double.infinity,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFF4C6FFF), Color(0xFF8F5BFF)],
+                        colors: [Color(0xFF0066A1), Color(0xFF004F7C)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
                     child: Stack(
                       children: [
-                        // Simple geometric decoration to mimic your reference
+                        // Simple geometric decoration
                         Positioned(
                           top: 40,
                           left: 40,
@@ -307,14 +316,15 @@ void _submit() {
                             ),
                           ),
                         ),
-                        const Center(
-                          child: Text(
-                            'Company\nMarketplace',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                        // Linde Logo at top
+                        Positioned(
+                          top: 60,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/linde_logo.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
@@ -338,26 +348,7 @@ void _submit() {
                 children: [
                   const SizedBox(height: 60),
                   form,
-                  Container(
-                    height: 200,
-                    margin: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF4C6FFF), Color(0xFF8F5BFF)],
-                      ),
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Company Marketplace',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             );

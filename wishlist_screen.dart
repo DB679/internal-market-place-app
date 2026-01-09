@@ -3,41 +3,7 @@ import 'dart:async';
 import 'wishlist_service.dart';
 import 'listing.dart';
 import 'listing_card.dart';
-import 'listing_detail_page.dart';
 
-// Temporary: Define demo listings here until you have a proper data source
-final List<Listing> demoListings = [
-  Listing(
-    id: '1',
-    title: 'Office Chair - Good Condition',
-    imageUrl: 'https://images.pexels.com/photos/276534/pexels-photo-276534.jpeg',
-    price: 1500,
-    location: 'Head Office, Floor 3',
-    date: 'Today',
-    category: 'Furniture',
-    description: 'Comfortable office chair in good condition.',
-  ),
-  Listing(
-    id: '2',
-    title: 'Dell Monitor 24 inch',
-    imageUrl: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg',
-    price: 5000,
-    location: 'IT Department, Floor 2',
-    date: 'Yesterday',
-    category: 'Electronics',
-    description: 'Full HD Dell monitor, 24 inches.',
-  ),
-  Listing(
-    id: '3',
-    title: 'Programming Books Set',
-    imageUrl: 'https://images.pexels.com/photos/1370295/pexels-photo-1370295.jpeg',
-    price: 800,
-    location: 'Library, Floor 1',
-    date: '2 days ago',
-    category: 'Books',
-    description: 'Collection of programming books.',
-  ),
-];
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -125,11 +91,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   item: l,
                   onTap: () {
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ListingDetailPage(listing: l),
-                      ),
-                    );
+                    context,
+                     MaterialPageRoute(
+                    builder: (_) => ListingDetailPage(listing: listing),
+                  ),
+                );
+
                   },
                 );
               },

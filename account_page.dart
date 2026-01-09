@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'edit_profile_page.dart';
 import 'history_page.dart'; // contains enum HistoryFilter
 import '../../../../services/user_manager.dart';
+import 'login_page.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -124,16 +125,20 @@ class _AccountPageState extends State<AccountPage> {
 }
 
 void _onLogoutThisDevice() {
-  // TODO: implement Supabase signOut(current session only)
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Logout (this device) (TODO)')),
+  // For now clear any in-app user state and navigate to login
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => const LoginPage()),
+    (_) => false,
   );
 }
 
 void _onLogoutAllDevices() {
-  // TODO: implement Supabase multi-session revoke via RPC/EdgeFunction
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Logout (all devices) (TODO)')),
+  // Behaves same as single-device logout in this demo
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => const LoginPage()),
+    (_) => false,
   );
 }
 

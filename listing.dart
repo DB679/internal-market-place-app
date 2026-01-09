@@ -7,11 +7,12 @@ class Listing {
   final String date;
   final String category;
   final bool isDonation;
-  final String? description;
-  final String? sellerName;
-  final String? sellerDepartment;
-  final String? sellerPhone;
-  final String? sellerEmail;
+
+  // Backend related (optional)
+  final String? listingType;
+  final String? status;
+  final String? listedBy;
+  final DateTime? createdAt;
 
   Listing({
     required this.id,
@@ -22,14 +23,40 @@ class Listing {
     required this.date,
     required this.category,
     this.isDonation = false,
-    this.description,
-    this.sellerName,
-    this.sellerDepartment,
-    this.sellerPhone,
-    this.sellerEmail,
+    this.listingType,
+    this.status,
+    this.listedBy,
+    this.createdAt,
   });
 
-  // Convert to JSON
+  // 🔥 BACKEND → UI SAFE MAPPER
+  factory Listing.fromJson(Map<String, dynamic> json) {
+    final created = json['created_at'] != null
+        ? DateTime.parse(json['created_at'])
+        : DateTime.now();
+
+    final type = json['listing_type'] ?? 'sell';
+
+    return Listing(
+      id: json['id'].toString(), // UI still expects String
+      title: json['title'] ?? '',
+      imageUrl: json['image'] ?? json['imageUrl'] ?? '',
+      price: json['price'] != null
+          ? double.parse(json['price'].toString()).toInt()
+          : 0,
+      location: json['location'] ?? '',
+      category: json['category'] ?? '',
+      date: created.toIso8601String().split('T').first,
+      isDonation: type == 'donate',
+      listingType: type,
+      status: json['status'],
+      listedBy: json['listed_by'],
+      createdAt: created,
+    );
+  }
+
+  // 👇 KEEP OLD METHODS (prevents 83 errors)
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -40,34 +67,9 @@ class Listing {
       'date': date,
       'category': category,
       'isDonation': isDonation,
-      'description': description,
-      'sellerName': sellerName,
-      'sellerDepartment': sellerDepartment,
-      'sellerPhone': sellerPhone,
-      'sellerEmail': sellerEmail,
     };
   }
 
-  // Create from JSON
-  factory Listing.fromJson(Map<String, dynamic> json) {
-    return Listing(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      imageUrl: json['imageUrl'] as String,
-      price: json['price'] as int,
-      location: json['location'] as String,
-      date: json['date'] as String,
-      category: json['category'] as String,
-      isDonation: json['isDonation'] as bool? ?? false,
-      description: json['description'] as String?,
-      sellerName: json['sellerName'] as String?,
-      sellerDepartment: json['sellerDepartment'] as String?,
-      sellerPhone: json['sellerPhone'] as String?,
-      sellerEmail: json['sellerEmail'] as String?,
-    );
-  }
-
-  // Create a copy with some fields updated
   Listing copyWith({
     String? id,
     String? title,
@@ -77,11 +79,6 @@ class Listing {
     String? date,
     String? category,
     bool? isDonation,
-    String? description,
-    String? sellerName,
-    String? sellerDepartment,
-    String? sellerPhone,
-    String? sellerEmail,
   }) {
     return Listing(
       id: id ?? this.id,
@@ -92,11 +89,10 @@ class Listing {
       date: date ?? this.date,
       category: category ?? this.category,
       isDonation: isDonation ?? this.isDonation,
-      description: description ?? this.description,
-      sellerName: sellerName ?? this.sellerName,
-      sellerDepartment: sellerDepartment ?? this.sellerDepartment,
-      sellerPhone: sellerPhone ?? this.sellerPhone,
-      sellerEmail: sellerEmail ?? this.sellerEmail,
+      listingType: listingType,
+      status: status,
+      listedBy: listedBy,
+      createdAt: createdAt,
     );
   }
 }

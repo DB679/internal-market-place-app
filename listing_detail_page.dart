@@ -1,444 +1,131 @@
-import 'package:flutter/material.dart';
-import 'listing.dart';
-import 'wishlist_service.dart';
-import 'inquiry_service.dart';
-import '../../../../services/user_service.dart';
-import 'dart:async';
+class Listing {
+  final String id;
+  final String title;
+  final String imageUrl;
+  final int price;
+  final String location;
+  final String date;
+  final String category;
+  final bool isDonation;
 
-class ListingDetailPage extends StatefulWidget {
-  final Listing listing;
-  final bool showInquiry;
-  final bool showAdminActions;
+  // 🔹 Backend-related
+  final String? listingType;
+  final String? status;
+  final String? listedBy;
+  final DateTime? createdAt;
 
-  const ListingDetailPage({super.key, required this.listing, this.showInquiry = true, this.showAdminActions = false});
+  // 🔹 UI-only fields (needed by detail & wishlist pages)
+  final String? description;
+  final String? sellerName;
+  final String? sellerDepartment;
+  final String? sellerPhone;
+  final String? sellerEmail;
 
-  @override
-  State<ListingDetailPage> createState() => _ListingDetailPageState();
-}
+  Listing({
+    required this.id,
+    required this.title,
+    required this.imageUrl,
+    required this.price,
+    required this.location,
+    required this.date,
+    required this.category,
+    this.isDonation = false,
+    this.listingType,
+    this.status,
+    this.listedBy,
+    this.createdAt,
+    this.description,
+    this.sellerName,
+    this.sellerDepartment,
+    this.sellerPhone,
+    this.sellerEmail,
+  });
 
-class _ListingDetailPageState extends State<ListingDetailPage> {
-  late bool _isFav;
-  StreamSubscription? _wishlistSubscription;
-  late bool _inquirySent;
+  // 🔥 BACKEND → UI SAFE MAPPER
+  factory Listing.fromJson(Map<String, dynamic> json) {
+    final created = json['created_at'] != null
+        ? DateTime.parse(json['created_at'])
+        : DateTime.now();
 
-  @override
-  void initState() {
-    super.initState();
-    _isFav = WishlistService.instance.containsSync(widget.listing.id);
-    _inquirySent = InquiryService.instance.all.any((i) => i.listingId == widget.listing.id);
-    
-    _wishlistSubscription = WishlistService.instance.stream.listen((_) {
-      if (mounted) {
-        setState(() {
-          _isFav = WishlistService.instance.containsSync(widget.listing.id);
-        });
-      }
-    });
-  }
+    final type = json['listing_type'] ?? 'sell';
 
-  @override
-  void dispose() {
-    _wishlistSubscription?.cancel();
-    super.dispose();
-  }
+    return Listing(
+      id: json['id'].toString(),
+      title: json['title'] ?? '',
+      imageUrl: json['image'] ?? json['imageUrl'] ?? '',
+      price: json['price'] != null
+          ? double.parse(json['price'].toString()).toInt()
+          : 0,
+      location: json['location'] ?? '',
+      category: json['category'] ?? '',
+      date: created.toIso8601String().split('T').first,
+      isDonation: type == 'donate',
+      listingType: type,
+      status: json['status'],
+      listedBy: json['listed_by'],
+      createdAt: created,
 
-  Future<void> _toggleWishlist() async {
-    await WishlistService.instance.toggle(widget.listing.id);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isFav ? 'Added to wishlist' : 'Removed from wishlist'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
-  }
-
-  Future<void> _showInquiryDialog() async {
-    final nameCtrl = TextEditingController();
-    final contactCtrl = TextEditingController();
-    final messageCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final sent = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Send Inquiry'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Your name'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter your name' : null,
-                ),
-                TextFormField(
-                  controller: contactCtrl,
-                  decoration: const InputDecoration(labelText: 'Contact (email or phone)'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter contact' : null,
-                ),
-                TextFormField(
-                  controller: messageCtrl,
-                  decoration: const InputDecoration(labelText: 'Message (optional)'),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                InquiryService.instance.addInquiry(
-                  listingId: widget.listing.id,
-                  listingTitle: widget.listing.title,
-                  buyerName: nameCtrl.text.trim(),
-                  buyerContact: contactCtrl.text.trim(),
-                  message: messageCtrl.text.trim(),
-                );
-                Navigator.of(context).pop(true);
-              }
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
+      // UI-safe optional fields
+      description: json['description'],
+      sellerName: json['seller_name'],
+      sellerDepartment: json['seller_department'],
+      sellerPhone: json['seller_phone'],
+      sellerEmail: json['seller_email'],
     );
-
-    if (sent == true && mounted) {
-      final seller = widget.listing.sellerName ?? 'the seller';
-      // mark sent so button disables
-      setState(() {
-        _inquirySent = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Inquiry sent to $seller')),
-      );
-    }
   }
 
-  Future<void> _sendInquiryAuto() async {
-    final user = UserService.instance;
-    if (!user.isLoggedIn) {
-      // fallback to dialog if no profile
-      await _showInquiryDialog();
-      return;
-    }
-
-    InquiryService.instance.addInquiry(
-      listingId: widget.listing.id,
-      listingTitle: widget.listing.title,
-      buyerName: user.name,
-      buyerContact: user.contact,
-      message: 'Automated enquiry: please contact me.',
-    );
-
-    if (mounted) {
-      setState(() {
-        _inquirySent = true;
-      });
-      final seller = widget.listing.sellerName ?? 'the seller';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Inquiry sent to $seller')),
-      );
-    }
+  // 👇 Keep old helpers to avoid cascading UI errors
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'imageUrl': imageUrl,
+      'price': price,
+      'location': location,
+      'date': date,
+      'category': category,
+      'isDonation': isDonation,
+      'description': description,
+      'sellerName': sellerName,
+      'sellerDepartment': sellerDepartment,
+      'sellerPhone': sellerPhone,
+      'sellerEmail': sellerEmail,
+    };
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final listing = widget.listing;
-    
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with image
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.network(
-                listing.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported, size: 50),
-                  );
-                },
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  _isFav ? Icons.favorite : Icons.favorite_outline,
-                  color: _isFav ? Colors.red : Colors.white,
-                ),
-                onPressed: _toggleWishlist,
-              ),
-            ],
-          ),
-
-          // Content
-          SliverList(
-            delegate: SliverChildListDelegate([
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Donation badge
-                    if (listing.isDonation)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          "FREE DONATION",
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    
-                    const SizedBox(height: 16),
-
-                    // Title
-                    Text(
-                      listing.title,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Price
-                    Text(
-                      listing.isDonation ? "FREE" : "₹ ${listing.price}",
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: listing.isDonation ? Colors.green : Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Location and Date
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            listing.location,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          listing.date,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // Description Section
-                    const Text(
-                      "Description",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      listing.description ?? "No description available.",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    // Contact Information (includes seller name, department, phone and email)
-                    const Text(
-                      "Contact Information",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Name + Department
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.person, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(listing.sellerName ?? 'Unknown Seller', style: const TextStyle(fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 4),
-                              Text(listing.sellerDepartment ?? 'Department not specified', style: const TextStyle(color: Colors.black54)),
-                            ],
-                          ),
-                        ),
-                        // removed right-side contact button per design
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-                    // Phone
-                    if (listing.sellerPhone != null)
-                      Row(
-                        children: [
-                          const Icon(Icons.phone, color: Colors.black54),
-                          const SizedBox(width: 8),
-                          Text(listing.sellerPhone!),
-                        ],
-                      ),
-                    const SizedBox(height: 8),
-                    // Email
-                    if (listing.sellerEmail != null)
-                      Row(
-                        children: [
-                          const Icon(Icons.email, color: Colors.black54),
-                          const SizedBox(width: 8),
-                          Text(listing.sellerEmail!),
-                        ],
-                      ),
-
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // Category
-                    Row(
-                      children: [
-                        const Text(
-                          "Category: ",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          listing.category,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // (Removed seller card) Seller details now shown under Contact Information below
-
-
-                    // Contact Button
-                    if (widget.showInquiry)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: _inquirySent
-                            ? ElevatedButton.icon(
-                                onPressed: null,
-                                icon: const Icon(Icons.check, color: Colors.white),
-                                label: const Text('Enquiry Sent', style: TextStyle(fontSize: 16)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.grey,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              )
-                                : ElevatedButton.icon(
-                                onPressed: () async {
-                                  await _sendInquiryAuto();
-                                },
-                                icon: const Icon(Icons.message),
-                                label: const Text(
-                                  'Send Inquiry',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                      ),
-
-                    // Admin actions: Accept / Reject directly from expanded view
-                    if (widget.showAdminActions)
-                      Column(
-                        children: [
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context, 'accepted');
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('Accept', style: TextStyle(color: Colors.white)),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context, 'rejected');
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    child: Text('Reject', style: TextStyle(color: Colors.white)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            ]),
-          ),
-        ],
-      ),
+  Listing copyWith({
+    String? id,
+    String? title,
+    String? imageUrl,
+    int? price,
+    String? location,
+    String? date,
+    String? category,
+    bool? isDonation,
+    String? description,
+    String? sellerName,
+    String? sellerDepartment,
+    String? sellerPhone,
+    String? sellerEmail,
+  }) {
+    return Listing(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      imageUrl: imageUrl ?? this.imageUrl,
+      price: price ?? this.price,
+      location: location ?? this.location,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      isDonation: isDonation ?? this.isDonation,
+      listingType: listingType,
+      status: status,
+      listedBy: listedBy,
+      createdAt: createdAt,
+      description: description ?? this.description,
+      sellerName: sellerName ?? this.sellerName,
+      sellerDepartment: sellerDepartment ?? this.sellerDepartment,
+      sellerPhone: sellerPhone ?? this.sellerPhone,
+      sellerEmail: sellerEmail ?? this.sellerEmail,
     );
   }
 }
